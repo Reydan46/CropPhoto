@@ -74,7 +74,7 @@ def run(input_crop_photo,
     logger.info(f'Load image: {img_filepath}')
     input_crop_photo.load_img_file(img_filepath)
 
-    # Ограниечение размера изображения
+    # Ограничение размера изображения
     logger.info('Check and resize image (limit)')
     input_crop_photo.resize_limit()
 
@@ -86,7 +86,7 @@ def run(input_crop_photo,
     # Поиск лица на изображении
     logger.info('Find faces')
     if input_crop_photo.find_faces(rotate=rotate, scale_factor=scale_factor) > 0:
-        if (plt_show or view):
+        if plt_show or view:
             if rotate:
                 # Отображение повёрнутого изображения на plot
                 logger.info('Show rotated image in plot')
