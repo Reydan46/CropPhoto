@@ -1,0 +1,17 @@
+altgraph==0.17.2
+cycler==0.11.0
+fonttools==4.36.0
+future==0.18.2
+kiwisolver==1.4.4
+matplotlib==3.5.2
+numpy==1.22.3
+opencv-python==4.5.5.64
+packaging==21.3
+pefile==2022.5.30
+Pillow==9.1.0
+pyinstaller==5.3
+pyinstaller-hooks-contrib==2022.8
+pyparsing==3.0.9
+python-dateutil==2.8.2
+pywin32-ctypes==0.2.0
+six==1.15.0
