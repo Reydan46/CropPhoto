@@ -1,10 +1,11 @@
-/.idea
-/build
-/dist
-/_backup
-/Photo*
-/upx
-/venv_py39
+/venv311/
+/_l/
+/_/
+/.idea/
+/build/
+/dist/
+/Photo*/
+/upx/
 *.jpg
 *.7z
 *.exe
@@ -13,3 +14,5 @@ haarcascade_eye.xml
 haarcascade_frontalface_alt2.xml
 haarcascade_frontalface_alt_tree.xml
 haarcascade_frontalface_default.xml
+/_backup/
+/CropPhoto.iml

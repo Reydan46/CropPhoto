@@ -1,4 +1,4 @@
-from cv2 import cv2
+import cv2
 import matplotlib.pyplot as mpplt
 import matplotlib.image as mpimg
 import numpy as np
@@ -7,6 +7,7 @@ import sys
 from time import time
 import warnings
 from PIL import Image
+from PIL import ImageOps
 
 import logging
 
@@ -74,7 +75,20 @@ class CropPhoto:
         t = time()
         if img_path and os.path.exists(img_path):
             self.__init__params()
-            self.img = mpplt.imread(img_path)
+            img = Image.open(img_path)
+
+            if hasattr(ImageOps, 'exif_transpose'):
+                # Very recent versions of PIL can do exit transpose internally
+                img = ImageOps.exif_transpose(img)
+            else:
+                # Otherwise, do the exif transpose ourselves
+                img = self.exif_transpose(img)
+
+            img = img.convert('RGB')
+
+            self.img = np.array(img)
+
+            # self.img = mpplt.imread(img_path)
         else:
             logger.error(f'Image file not found!')
         logger.debug(f'Time: {round(time() - t, 4)}')
@@ -137,6 +151,45 @@ class CropPhoto:
         else:
             return 0, 0
 
+    def exif_transpose(self, img):
+        if not img:
+            return img
+
+        exif_orientation_tag = 274
+
+        # Check for EXIF data (only present on some files)
+        if hasattr(img, "_getexif") and isinstance(img._getexif(), dict) and exif_orientation_tag in img._getexif():
+            exif_data = img._getexif()
+            orientation = exif_data[exif_orientation_tag]
+
+            # Handle EXIF Orientation
+            if orientation == 1:
+                # Normal image - nothing to do!
+                pass
+            elif orientation == 2:
+                # Mirrored left to right
+                img = img.transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 3:
+                # Rotated 180 degrees
+                img = img.rotate(180)
+            elif orientation == 4:
+                # Mirrored top to bottom
+                img = img.rotate(180).transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 5:
+                # Mirrored along top-left diagonal
+                img = img.rotate(-90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 6:
+                # Rotated 90 degrees
+                img = img.rotate(-90, expand=True)
+            elif orientation == 7:
+                # Mirrored along top-right diagonal
+                img = img.rotate(90, expand=True).transpose(Image.FLIP_LEFT_RIGHT)
+            elif orientation == 8:
+                # Rotated 270 degrees
+                img = img.rotate(90, expand=True)
+
+        return img
+
     def __find_faces(self, scale_factor: float, min_neighbors: int, input_img=None):
         t = time()
         if input_img is not None:
@@ -185,21 +238,26 @@ class CropPhoto:
 
         return len(faces)
 
-    def get_scale(self, etalon_size_w: int, etalon_size_h: int, size_w: int, size_h: int):
+    def get_scale(self, etalon_size_w: int, etalon_size_h: int, size_w: int, size_h: int, max_size_w: int,
+                  max_size_h: int):
         try:
             scale = 1 / (((etalon_size_w / size_w) + (etalon_size_h / size_h)) / 2)
+            if (scale * self.get_width()) > max_size_w:
+                scale = max_size_w / self.get_width()
+            if (scale * self.get_height()) > max_size_h:
+                scale = max_size_h / self.get_height()
         except:
             scale = 1
         return scale
 
-    def get_scale_face(self, size_w: int = 365, size_h: int = 365):
+    def get_scale_face(self, size_w: int = 365, size_h: int = 365, max_size_w: int = 12000, max_size_h: int = 8000):
         if not self.face.is_null():
-            self.scale_face = self.get_scale(self.face.w, self.face.h, size_w, size_h)
+            self.scale_face = self.get_scale(self.face.w, self.face.h, size_w, size_h, max_size_w, max_size_h)
             logger.info(f'Scale face: {self.scale_face}')
         else:
             logger.error(f'Face is not set!')
 
-    def get_scale_img(self, size_w: int = 6000, size_h: int = 4000):
+    def get_scale_img(self, size_w: int = 12000, size_h: int = 8000):
         if self.img.size > 0:
             self.get_scale(self.get_width(), self.get_height(), size_w, size_h)
         else:

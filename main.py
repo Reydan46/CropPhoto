@@ -1,10 +1,13 @@
 import argparse
 import os
+import sys
 import matplotlib
 import matplotlib.pyplot as mpplt
 from cropphoto import CropPhoto, logger
 import tkinter as tk
 from tkinter import filedialog
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 
 class MyParser(argparse.ArgumentParser):
@@ -21,7 +24,7 @@ parser.add_argument('-p', type=bool, action=argparse.BooleanOptionalAction, dest
 parser.add_argument('-z', type=bool, action=argparse.BooleanOptionalAction, dest='zoom',
                     help='Подгонять изображения к нужному выходному размеру')
 parser.add_argument('-r', type=bool, action=argparse.BooleanOptionalAction, dest='rotate',
-                    help='НЕ поворачивать изображения при НЕнахождении лица')
+                    help='Поворачивать изображения при НЕнахождении лица')
 parser.add_argument('-v', type=bool, action=argparse.BooleanOptionalAction, dest='view',
                     help='Показать только панель с отладкой (без сохранения результатов)')
 parser.add_argument('-sf', type=float, action='store', dest='scale_factor', default=1.25,
@@ -37,7 +40,7 @@ def run(input_crop_photo,
         img_filepath: str = '',
         zoom: bool = False,
         plt_show: bool = False,
-        rotate: bool = True,
+        rotate: bool = False,
         view: bool = False,
         scale_factor: float = 1.25,
         input_out_size_img_w: int = 648,
@@ -103,7 +106,7 @@ def run(input_crop_photo,
         logger.info('Get scale face')
         input_crop_photo.get_scale_face(input_face_size_img_w, input_face_size_img_h)
 
-        # Изменение размера размера изображения по вычесленному масштабированию
+        # Изменение размера изображения по вычесленному масштабированию
         logger.info('Resize image with scale')
         input_crop_photo.scaling(input_crop_photo.scale_face)
         if plt_show or view:
@@ -212,7 +215,7 @@ if __name__ == "__main__":
 
     for file in files:
         try:
-            run(crop_photo, file, args.zoom, args.plt_show, not args.rotate, args.view, args.scale_factor,
+            run(crop_photo, file, args.zoom, args.plt_show, args.rotate, args.view, args.scale_factor,
                 out_size_img_w, out_size_img_h, out_size_img_1c_w, out_size_img_1c_h, face_size_img_w, face_size_img_h)
         except:
             logger.error(f'Failed to process image: {file}')
