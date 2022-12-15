@@ -1,5 +1,4 @@
 import cv2
-import matplotlib.pyplot as mpplt
 import matplotlib.image as mpimg
 import numpy as np
 import os
@@ -13,8 +12,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-logger.setLevel(logging.DEBUG)
-# logger.setLevel(logging.INFO)
+# logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 # logger.setLevel(logging.WARNING)
 # logger.setLevel(logging.ERROR)
 

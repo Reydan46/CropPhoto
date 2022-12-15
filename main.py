@@ -189,14 +189,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     files = []
+    ext = ['.bmp', '.gif', '.jp2', '.jpg', '.jpeg', '.pcx', '.png', '.ppm', '.tga']
     if args.img_path:
-        for file in args.img_path:
-            files += [file]
+        for item in args.img_path:
+            if os.path.isfile(item) and os.path.splitext(item)[-1] in ext:
+                files += [item]
+            elif os.path.isdir(item):
+                for subitem in os.listdir(item):
+                    file = os.path.join(item, subitem)
+                    if os.path.isfile(file) and os.path.splitext(file)[-1] in ext:
+                        files += [file]
     else:
         root = tk.Tk()
         root.withdraw()
         filetypes = (
-            ('Изображения', ['*.jpg', '*.jpeg', '*.png']),
+            ('Изображения', ['*' + i for i in ext]),
         )
         img_paths = filedialog.askopenfilename(
             title='Выберите фотографии...',

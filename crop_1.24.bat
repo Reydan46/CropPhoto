@@ -32,6 +32,6 @@ if defined _OLD_CODEPAGE (
 )
 
 
-venv311\Scripts\python.exe main.py -sf 1.24 %1
+venv311\Scripts\python.exe main.py -sf 1.24 %*
 
 pause
