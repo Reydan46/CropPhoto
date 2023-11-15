@@ -7,7 +7,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Remote\UST\Python\CropPhoto\venv311
+set VIRTUAL_ENV=%~dp0venv311
 
 if not defined PROMPT set PROMPT=$P$G
 
@@ -32,6 +32,6 @@ if defined _OLD_CODEPAGE (
 )
 
 
-venv311\Scripts\python.exe main.py -sf 1.26 %*
+"%VIRTUAL_ENV%\Scripts\python.exe" "%VIRTUAL_ENV%\..\main.py" -sf 1.26 %*
 
 pause

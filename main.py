@@ -23,12 +23,16 @@ parser.add_argument('-p', type=bool, action=argparse.BooleanOptionalAction, dest
                     help='Показать панель отладки с просмотром этапов')
 parser.add_argument('-z', type=bool, action=argparse.BooleanOptionalAction, dest='zoom',
                     help='Подгонять изображения к нужному выходному размеру')
+parser.add_argument('-c', type=bool, action=argparse.BooleanOptionalAction, dest='correct_position',
+                    help='Выводить запрос на корректировку координат лица')
 parser.add_argument('-r', type=bool, action=argparse.BooleanOptionalAction, dest='rotate',
                     help='Поворачивать изображения при НЕнахождении лица')
 parser.add_argument('-v', type=bool, action=argparse.BooleanOptionalAction, dest='view',
                     help='Показать только панель с отладкой (без сохранения результатов)')
-parser.add_argument('-sf', type=float, action='store', dest='scale_factor', default=1.25,
-                    help='Изменить scale factor поиска лица (по умолчанию 1.25)')
+parser.add_argument('-sf', type=float, action='store', dest='scale_factor', default=1.28,
+                    help='Изменить scale factor поиска лица (по умолчанию 1.28)')
+parser.add_argument('-zf', type=bool, action=argparse.BooleanOptionalAction, dest='zoom_face',
+                    help='Изменить масштаб нахождения лица (по умолчанию - нет)')
 
 # Отключение кнопок панели отладки
 matplotlib.rcParams['toolbar'] = 'None'
@@ -42,7 +46,9 @@ def run(input_crop_photo,
         plt_show: bool = False,
         rotate: bool = False,
         view: bool = False,
-        scale_factor: float = 1.25,
+        correct_position: bool = False,
+        scale_factor: float = 1.28,
+        zoom_face: bool = False,
         input_out_size_img_w: int = 648,
         input_out_size_img_h: int = 648,
         input_out_size_img_1c_w: int = 100,
@@ -51,6 +57,11 @@ def run(input_crop_photo,
         input_face_size_img_h: int = 365,
         ):
     global plt_custom
+
+    if zoom_face:
+        zoom_face_float = float(input('Enter face zoom:'))
+        input_face_size_img_h = int(input_face_size_img_h * zoom_face_float)
+        input_face_size_img_w = int(input_face_size_img_w * zoom_face_float)
 
     if plt_show or view:
         # Создание subplots для вывода изображений (оригинал, поворот, лицо, ресайз, лицо после ресайза, кроп)
@@ -116,6 +127,8 @@ def run(input_crop_photo,
         # Поиск лица на изображении
         logger.info('Find faces')
         if input_crop_photo.find_faces(rotate=rotate, scale_factor=scale_factor) > 0:
+            if correct_position:
+                input_crop_photo.correct_position_face()
             if plt_show or view:
                 # Выделение лица на plot
                 logger.info('Mark face in resized image')
@@ -163,7 +176,8 @@ def run(input_crop_photo,
             if not view:
                 # Сохранение полученного изображения для 1С
                 logger.info('Save 1C image in file')
-                input_crop_photo.save_image_to_file(f"{os.path.splitext(img_filepath)[0]}_1C.jpg")
+                input_crop_photo.save_image_to_file(f"{os.path.splitext(img_filepath)[0]}_1C.png", filetype="PNG",
+                                                    quality=100)
         else:
             logger.error('Faces not found!')
     else:
@@ -183,8 +197,8 @@ if __name__ == "__main__":
     # Размер лица, для приведения размера фотографии к общему виду (эталонный размер)
     face_size_img_w = 365
     face_size_img_h = 365
-    # face_size_img_w = 300
-    # face_size_img_h = 300
+    face_size_img_w = 340
+    face_size_img_h = 340
 
     args = parser.parse_args()
 
@@ -192,12 +206,12 @@ if __name__ == "__main__":
     ext = ['.bmp', '.gif', '.jp2', '.jpg', '.jpeg', '.pcx', '.png', '.ppm', '.tga']
     if args.img_path:
         for item in args.img_path:
-            if os.path.isfile(item) and os.path.splitext(item)[-1] in ext:
+            if os.path.isfile(item) and os.path.splitext(item)[-1].lower() in ext:
                 files += [item]
             elif os.path.isdir(item):
                 for subitem in os.listdir(item):
                     file = os.path.join(item, subitem)
-                    if os.path.isfile(file) and os.path.splitext(file)[-1] in ext:
+                    if os.path.isfile(file) and os.path.splitext(file)[-1].lower() in ext:
                         files += [file]
     else:
         root = tk.Tk()
@@ -222,8 +236,9 @@ if __name__ == "__main__":
 
     for file in files:
         try:
-            run(crop_photo, file, args.zoom, args.plt_show, args.rotate, args.view, args.scale_factor,
-                out_size_img_w, out_size_img_h, out_size_img_1c_w, out_size_img_1c_h, face_size_img_w, face_size_img_h)
+            run(crop_photo, file, args.zoom, args.plt_show, args.rotate, args.view, args.correct_position,
+                args.scale_factor, args.zoom_face, out_size_img_w, out_size_img_h, out_size_img_1c_w, out_size_img_1c_h,
+                face_size_img_w, face_size_img_h)
         except:
             logger.error(f'Failed to process image: {file}')
-            open("Fail.txt", 'a').write(f'{file}\n')
+            open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Fail.txt"), 'a').write(f'{file}\n')

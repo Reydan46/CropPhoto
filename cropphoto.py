@@ -1,5 +1,4 @@
 import cv2
-import matplotlib.image as mpimg
 import numpy as np
 import os
 import sys
@@ -11,22 +10,11 @@ from PIL import ImageOps
 import logging
 
 logger = logging.getLogger(__name__)
-
-# logger.setLevel(logging.DEBUG)
 logger.setLevel(logging.INFO)
-# logger.setLevel(logging.WARNING)
-# logger.setLevel(logging.ERROR)
-
 c_handler = logging.StreamHandler(sys.stdout)
 c_format = logging.Formatter("[%(asctime)s - %(funcName)20s() ] %(message)s", datefmt='%d.%m.%Y %H:%M:%S')
 c_handler.setFormatter(c_format)
 logger.addHandler(c_handler)
-
-# logger.debug('logger.debug')
-# logger.info('logger.info')
-# logger.warning('logger.warning')
-# logger.error('logger.error')
-# logger.exception('logger.exception')
 
 warnings.simplefilter('ignore', Image.DecompressionBombWarning)
 
@@ -86,8 +74,6 @@ class CropPhoto:
             img = img.convert('RGB')
 
             self.img = np.array(img)
-
-            # self.img = mpplt.imread(img_path)
         else:
             logger.error(f'Image file not found!')
         logger.debug(f'Time: {round(time() - t, 4)}')
@@ -237,6 +223,38 @@ class CropPhoto:
 
         return len(faces)
 
+    def correct_position_face(self):
+        while True:
+            x = input("Смещение по оси X (по умолчанию 0): ")
+            if x == "":
+                x = 0
+            try:
+                x = int(x)
+            except:
+                pass
+            if type(x) == int:
+                x = int(x)
+                break
+            else:
+                print("Пожалуйста, введите только числа.")
+        while True:
+            y = input("Смещение по оси Y (по умолчанию 0): ")
+            if y == "":
+                y = 0
+            try:
+                y = int(y)
+            except:
+                pass
+            if type(y) == int:
+                y = int(y)
+                break
+            else:
+                print("Пожалуйста, введите только числа.")
+        logger.info(f'OLD position face: X {self.face.x} Y {self.face.y})')
+        self.face.x += x
+        self.face.y += y
+        logger.info(f'NEW position face: X {self.face.x} Y {self.face.y})')
+
     def get_scale(self, etalon_size_w: int, etalon_size_h: int, size_w: int, size_h: int, max_size_w: int,
                   max_size_h: int):
         try:
@@ -373,7 +391,10 @@ class CropPhoto:
         t = time()
         if self.img.size > 0:
             logger.info(f'Resize image: {self.get_width()}x{self.get_height()} > {width}x{height}')
-            self.img = cv2.resize(self.img, (width, height), interpolation=cv2.INTER_LINEAR)
+            temp_img = Image.fromarray(self.img, mode="RGB")
+            temp_img = temp_img.resize((width, height), resample=Image.Resampling.LANCZOS)
+            self.img = np.array(temp_img)
+
         else:
             logger.error(f'Image is not set!')
         logger.debug(f'Time: {round(time() - t, 4)}')
@@ -407,6 +428,7 @@ class CropPhoto:
                        y_min:y_max,
                        x_min:x_max
                        ]
+
         else:
             logger.error(f'Image is not set!')
         logger.debug(f'Time: {round(time() - t, 4)}')
@@ -430,10 +452,11 @@ class CropPhoto:
             height,
         )
 
-    def save_image_to_file(self, img_path: str = '', filetype: str = 'jpg', dpi: int = 72):
+    def save_image_to_file(self, img_path: str = '', filetype: str = "JPEG", quality: int = 80):
         t = time()
         if self.img.size > 0:
-            mpimg.imsave(img_path, self.img, format=filetype, dpi=dpi)
+            temp_img = Image.fromarray(self.img, mode="RGB")
+            temp_img.save(img_path, filetype, quality=quality)
         else:
             logger.error(f'Image is not set!')
         logger.debug(f'Time: {round(time() - t, 4)}')
